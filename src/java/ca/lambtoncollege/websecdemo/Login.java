@@ -8,6 +8,7 @@ package ca.lambtoncollege.websecdemo;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -62,11 +63,16 @@ public class Login implements Serializable {
                 "jdbc:mysql://localhost/websecdemo",
                 "root",
                 "");
-        Statement stmt = conn.createStatement();
-        String sql = "SELECT * FROM users WHERE username = '"
-                + username + "' AND password = '" + password + "' LIMIT 1";
-        ResultSet rs = stmt.executeQuery(sql);
-        if (rs.next()) {
+        // Use Parameterized SQL to Filter SQL Injection Attacks
+        String sql = "SELECT * FROM users WHERE username = ? AND password = ? LIMIT 1";
+        PreparedStatement stmt = conn.prepareStatement(sql);
+        stmt.setString(1, username);
+        stmt.setString(2, password);    
+        stmt.execute();
+        ResultSet rs = stmt.getResultSet();
+        // Double-Check Results to Verify Actual Logic
+        if (rs.next() && rs.getString("username").equals(username)
+                && rs.getString("password").equals(password)) {
             loggedIn = true;
         } else {
             loggedIn = false;
